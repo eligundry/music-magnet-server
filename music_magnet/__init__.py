@@ -1,9 +1,7 @@
 from flask.ext.api import FlaskAPI
-from tpb import TPB
 import pylast
 import discogs_client as discogs
 
-tpb = TPB('https://thepiratebay.org')
 lf = pylast.LastFMNetwork()
 
 def create_app(config_objects=['music_magnet.settings.site']):
