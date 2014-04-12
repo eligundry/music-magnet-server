@@ -1,8 +1,11 @@
-from flask import Blueprint
+from music_magnet import tpb
+from music_magnet.views import *
 
-search = Blueprint('search', __name__)
+blueprint = Blueprint('search', __name__)
 
-@search.route('/search', methods=['POST'])
-@search.route('/search/<query>', methods=['GET'])
-def search_tpb(query):
-    pass
+@blueprint.route('/search')
+def search_last_fm():
+    """
+    Searches last.fm
+    """
+    return {}
