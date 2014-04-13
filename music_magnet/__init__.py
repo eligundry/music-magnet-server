@@ -1,4 +1,5 @@
 from flask.ext.api import FlaskAPI
+from tpb import TPB
 import pylast
 
 lf = pylast.LastFMNetwork()
