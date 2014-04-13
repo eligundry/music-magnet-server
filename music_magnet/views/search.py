@@ -34,21 +34,44 @@ def search_tpb():
     Searches The Pirate Bay for torrent info
     """
 
+    args = request.args
     result = []
-    query = request.args.get('q')
-    torrents = tpb.search(query, category=CATEGORIES.AUDIO,
-            order=ORDERS.SEEDERS.DES)
+
+    if args.has_key('q') is not True:
+        result = {
+            'code': 400,
+            'message': "You did not include a 'q' attribute to make a query with."
+        }
+
+        return result, status.HTTP_400_BAD_REQUEST
+
+    torrents = None
+
+    if args.has_key('page'):
+        torrents = tpb.search(args['q'], page=args['page'],
+                order=ORDERS.SEEDERS.DES, category=CATEGORIES.AUDIO)
+    else:
+        torrents = tpb.search(args['q'], order=ORDERS.SEEDERS.DES,
+                category=CATEGORIES.AUDIO)
+
 
     for torrent in torrents.items():
-        if torrent.sub_category != CATEGORIES.AUDIO.FLAC:
-            result.append({
+        if torrent.sub_category != 'FLAC' and torrent.seeders != 0:
+            item = {
+                'id': torrent.id,
                 'title': torrent.title,
-                'magnet': torrent.magnet_link,
-                'file_list': sorted(torrent.files),
-            })
+                'seeders': torrent.seeders,
+                'leachers': torrent.leechers,
+                'magnet': torrent.magnet_link
+            }
+
+            result.append(item)
 
     return result
 
+@blueprint.route('/search/tpb/<id>', methods=['GET'])
+def get_tpb_torrent():
+    pass
 
 @blueprint.route('/search/lastfm/artist', methods=['GET'])
 def search_last_fm():
