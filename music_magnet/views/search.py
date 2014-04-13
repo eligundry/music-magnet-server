@@ -1,5 +1,6 @@
 import time
 import kat
+import re
 
 from tpb import TPB, CATEGORIES, ORDERS
 
@@ -8,6 +9,7 @@ from music_magnet.views import *
 
 blueprint = Blueprint('search', __name__)
 tpb = TPB('https://thepiratebay.org')
+year_match = re.compile('[0-9]{4}')
 
 @blueprint.route('/kat', methods=['GET'])
 def search_kat():
@@ -90,14 +92,14 @@ def search_last_fm():
     for artist in artists[0:6]:
         item = {
             'name': artist.name,
-            'image': artist.get_cover_image(),
+            'image': artist.get_cover_image(size=2),
         }
 
         result.append(item)
 
     return result
 
-@blueprint.route('/lastfm/artist/<artist>', methods=['GET'])
+@blueprint.route('/lastfm/<artist>', methods=['GET'])
 def get_artist(artist):
     """
     Gets a single artist from Last.fm
@@ -105,20 +107,17 @@ def get_artist(artist):
     artist = lf.get_artist(artist)
     result = {
         'name': artist.name,
-        'cover_image': artist.get_cover_image(),
+        'cover_image': artist.get_cover_image(size=2),
         'bio_summary': artist.get_bio_summary(),
         'albums': [],
     }
-
-    import re
-    year_match = re.compile('[0-9]{4}')
 
     for album in artist.get_top_albums():
         year = re.search(year_match, album.item.get_release_date())
 
         item = {
             'title': album.item.title,
-            'image': album.item.get_cover_image(),
+            'image': album.item.get_cover_image(size=2),
             'year': year.group(0) if year is not None else None,
         }
 
@@ -126,6 +125,24 @@ def get_artist(artist):
 
     return result
 
-@blueprint.route('/lastfm/album/<album>', methods=['GET'])
-def get_album(album):
-    pass
+@blueprint.route('/lastfm/<artist>/<album>', methods=['GET'])
+def get_album(artist, album):
+    alb = lf.get_album(artist, album)
+    year = re.search(year_match, alb.get_release_date())
+
+    result = {
+        'artist': artist,
+        'title': album,
+        'year': year.group(0) if year is not None else None,
+        'image': alb.get_cover_image(size=2),
+        'tracks': [],
+    }
+
+    for idx, track in enumerate(alb.get_tracks()):
+        result['tracks'].append({
+            'number': idx+1,
+            'title': track.title,
+        })
+
+
+    return result
